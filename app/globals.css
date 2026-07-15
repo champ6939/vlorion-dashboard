@@ -1,9 +1,8 @@
 /**
- * VLORION Dashboard — Layout Styles
+ * VLORION Dashboard — Global Styles
  * ------------------------------------------------------------------
- * Two themes toggled via [data-theme="dark"|"light"] on the root
- * .dash wrapper. Same brand accent (cyan/pink) in both modes; only
- * the surface/text values swap.
+ * Dark theme only (matches the main VLORION site). Sidebar + top
+ * bar + content panel layout.
  * ------------------------------------------------------------------
  */
 
@@ -23,16 +22,6 @@
     font-family: 'Orbitron', 'Courier New', 'Segoe UI', sans-serif;
 }
 
-.dash[data-theme="light"] {
-    --dash-bg: #f4f6fb;
-    --dash-surface: #ffffff;
-    --dash-border: rgba(0, 140, 168, 0.2);
-    --dash-text: #0f1419;
-    --dash-text-muted: #5b6472;
-    --dash-accent: #0090a8;
-    --dash-accent-2: #d1005c;
-}
-
 /* ── Sidebar ──────────────────────────────────────────────────── */
 
 .dash-sidebar {
@@ -49,16 +38,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-bottom: 1px solid transparent;
+    border-bottom: 1px solid var(--dash-border);
 }
 
-.dash-logo-placeholder {
-    font-size: 0.75rem;
-    letter-spacing: 3px;
-    color: var(--dash-text-muted);
-    border: 1px dashed var(--dash-border);
-    padding: 0.5rem 1.2rem;
-    border-radius: 6px;
+.dash-logo-img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
 }
 
 .dash-nav {
@@ -166,26 +152,29 @@
     gap: 0.75rem;
 }
 
-.dash-icon-btn {
+.dash-lang-btn {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 36px;
+    gap: 0.4rem;
+    padding: 0 0.9rem;
     height: 36px;
-    border-radius: 50%;
+    border-radius: 999px;
     background: rgba(0, 217, 255, 0.08);
     border: 1px solid var(--dash-border);
     color: var(--dash-accent);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.dash-icon-btn svg {
-    width: 18px;
-    height: 18px;
+.dash-lang-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
-.dash-icon-btn:hover {
+.dash-lang-btn:hover {
     background: var(--dash-accent);
     color: #0f1419;
 }
@@ -225,6 +214,7 @@
     .dash-logo-slot {
         height: auto;
         padding: 0.75rem 1rem;
+        border-bottom: none;
     }
 
     .dash-nav {

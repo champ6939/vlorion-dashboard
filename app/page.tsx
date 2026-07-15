@@ -1,10 +1,10 @@
 /**
  * VLORION Dashboard — Shell Layout
  * ------------------------------------------------------------------
- * Sidebar (logo slot, nav, avatar/logout, role badge) + top bar
- * (live clock, language, light/dark toggle) + main content panel.
- * Nav switching is local state for now — will become real routes
- * (/dashboard/employees, /dashboard/forms, /dashboard/settings)
+ * Sidebar (logo, nav, avatar/logout, role badge) + top bar (live
+ * clock, zh/en language toggle) + main content panel. Dark theme
+ * only. Nav switching is local state for now — will become real
+ * routes (/dashboard/employees, /dashboard/forms, /dashboard/settings)
  * once each feature is implemented and sits behind Cloudflare Access.
  * ------------------------------------------------------------------
  */
@@ -15,13 +15,40 @@ import { useEffect, useState } from 'react';
 import './globals.css';
 
 type Panel = 'employees' | 'forms' | 'settings';
-type Theme = 'dark' | 'light';
+type Lang = 'zh-TW' | 'en';
 
-const NAV_ITEMS: { key: Panel; label: string }[] = [
-    { key: 'employees', label: '人員管理' },
-    { key: 'forms', label: '表單創作' },
-    { key: 'settings', label: '設定' },
-];
+const NAV_LABELS: Record<Lang, Record<Panel, string>> = {
+    'zh-TW': { employees: '人員管理', forms: '表單創作', settings: '設定' },
+    'en': { employees: 'Personnel', forms: 'Form Builder', settings: 'Settings' },
+};
+
+const COPY: Record<Lang, {
+    logout: string;
+    role: string;
+    clockLabel: string;
+    employeesEmpty: string;
+    formsEmpty: string;
+    settingsEmpty: string;
+}> = {
+    'zh-TW': {
+        logout: '登出',
+        role: 'ID級別：管理員',
+        clockLabel: '當前時間',
+        employeesEmpty: '還沒有員工資料——這裡之後會顯示員工列表、新增/移除功能。',
+        formsEmpty: '還沒有表單——這裡之後會是視覺化表單建構器。',
+        settingsEmpty: '帳號與系統設定會放在這裡。',
+    },
+    'en': {
+        logout: 'Log out',
+        role: 'Role: Admin',
+        clockLabel: 'Current time',
+        employeesEmpty: 'No staff yet — the employee list and add/remove tools will live here.',
+        formsEmpty: 'No forms yet — the visual form builder will live here.',
+        settingsEmpty: 'Account and system settings will live here.',
+    },
+};
+
+const PANEL_ORDER: Panel[] = ['employees', 'forms', 'settings'];
 
 function formatClock(date: Date) {
     const y = date.getFullYear();
@@ -34,7 +61,7 @@ function formatClock(date: Date) {
 
 export default function DashboardPage() {
     const [activePanel, setActivePanel] = useState<Panel>('employees');
-    const [theme, setTheme] = useState<Theme>('dark');
+    const [lang, setLang] = useState<Lang>('zh-TW');
     const [now, setNow] = useState<Date | null>(null);
 
     // Live clock — ticks every second. Starts null so the server-rendered
@@ -45,15 +72,15 @@ export default function DashboardPage() {
         return () => clearInterval(id);
     }, []);
 
-    // Persist the person's light/dark preference across visits.
+    // Persist the person's language preference across visits.
     useEffect(() => {
-        const saved = window.localStorage.getItem('vlorion-dashboard-theme');
-        if (saved === 'light' || saved === 'dark') setTheme(saved);
+        const saved = window.localStorage.getItem('vlorion-dashboard-lang');
+        if (saved === 'zh-TW' || saved === 'en') setLang(saved);
     }, []);
 
     useEffect(() => {
-        window.localStorage.setItem('vlorion-dashboard-theme', theme);
-    }, [theme]);
+        window.localStorage.setItem('vlorion-dashboard-lang', lang);
+    }, [lang]);
 
     const handleLogout = () => {
         // Cloudflare Access's built-in logout endpoint — clears the Access
@@ -61,24 +88,25 @@ export default function DashboardPage() {
         window.location.href = '/cdn-cgi/access/logout';
     };
 
+    const t = COPY[lang];
+
     return (
-        <div className="dash" data-theme={theme}>
+        <div className="dash">
             {/* ── Sidebar ──────────────────────────────────────────── */}
             <aside className="dash-sidebar">
                 <div className="dash-logo-slot">
-                    {/* Drop the VLORION mark here, e.g. <img src="/icon.png" alt="VLORION" /> */}
-                    <span className="dash-logo-placeholder">LOGO</span>
+                    <img src="/favicon.ico" alt="VLORION" className="dash-logo-img" />
                 </div>
 
                 <nav className="dash-nav">
-                    {NAV_ITEMS.map(item => (
+                    {PANEL_ORDER.map(key => (
                         <button
-                            key={item.key}
+                            key={key}
                             type="button"
-                            className={`dash-nav-btn${activePanel === item.key ? ' active' : ''}`}
-                            onClick={() => setActivePanel(item.key)}
+                            className={`dash-nav-btn${activePanel === key ? ' active' : ''}`}
+                            onClick={() => setActivePanel(key)}
                         >
-                            {item.label}
+                            {NAV_LABELS[lang][key]}
                         </button>
                     ))}
                 </nav>
@@ -89,9 +117,9 @@ export default function DashboardPage() {
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
-                        <span>登出</span>
+                        <span>{t.logout}</span>
                     </button>
-                    <div className="dash-role-badge">ID級別：管理員</div>
+                    <div className="dash-role-badge">{t.role}</div>
                 </div>
             </aside>
 
@@ -99,39 +127,21 @@ export default function DashboardPage() {
             <div className="dash-main">
                 <header className="dash-topbar">
                     <div className="dash-clock">
-                        當前時間：{now ? formatClock(now) : '—'}
+                        {t.clockLabel}：{now ? formatClock(now) : '—'}
                     </div>
                     <div className="dash-topbar-actions">
                         <button
                             type="button"
-                            className="dash-icon-btn"
-                            aria-label="切換淺色/深色模式"
-                            onClick={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
+                            className="dash-lang-btn"
+                            aria-label="Switch language"
+                            onClick={() => setLang(l => (l === 'zh-TW' ? 'en' : 'zh-TW'))}
                         >
-                            {theme === 'dark' ? (
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="5"></circle>
-                                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                                </svg>
-                            ) : (
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                                </svg>
-                            )}
-                        </button>
-                        <button type="button" className="dash-icon-btn" aria-label="切換語言">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <line x1="2" y1="12" x2="22" y2="12"></line>
                                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                             </svg>
+                            <span>{lang === 'zh-TW' ? '中' : 'EN'}</span>
                         </button>
                     </div>
                 </header>
@@ -139,20 +149,20 @@ export default function DashboardPage() {
                 <main className="dash-content">
                     {activePanel === 'employees' && (
                         <div className="dash-panel">
-                            <h1>人員管理</h1>
-                            <p className="dash-panel-empty">還沒有員工資料——這裡之後會顯示員工列表、新增/移除功能。</p>
+                            <h1>{NAV_LABELS[lang].employees}</h1>
+                            <p className="dash-panel-empty">{t.employeesEmpty}</p>
                         </div>
                     )}
                     {activePanel === 'forms' && (
                         <div className="dash-panel">
-                            <h1>表單創作</h1>
-                            <p className="dash-panel-empty">還沒有表單——這裡之後會是視覺化表單建構器。</p>
+                            <h1>{NAV_LABELS[lang].forms}</h1>
+                            <p className="dash-panel-empty">{t.formsEmpty}</p>
                         </div>
                     )}
                     {activePanel === 'settings' && (
                         <div className="dash-panel">
-                            <h1>設定</h1>
-                            <p className="dash-panel-empty">帳號與系統設定會放在這裡。</p>
+                            <h1>{NAV_LABELS[lang].settings}</h1>
+                            <p className="dash-panel-empty">{t.settingsEmpty}</p>
                         </div>
                     )}
                 </main>
