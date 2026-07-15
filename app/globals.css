@@ -1,26 +1,240 @@
-@import "tailwindcss";
+/**
+ * VLORION Dashboard — Layout Styles
+ * ------------------------------------------------------------------
+ * Two themes toggled via [data-theme="dark"|"light"] on the root
+ * .dash wrapper. Same brand accent (cyan/pink) in both modes; only
+ * the surface/text values swap.
+ * ------------------------------------------------------------------
+ */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+.dash {
+    --dash-bg: #0a0e27;
+    --dash-surface: #111825;
+    --dash-border: rgba(0, 217, 255, 0.2);
+    --dash-text: #ffffff;
+    --dash-text-muted: #94a3b8;
+    --dash-accent: #00d9ff;
+    --dash-accent-2: #ff006e;
+
+    display: flex;
+    min-height: 100vh;
+    background: var(--dash-bg);
+    color: var(--dash-text);
+    font-family: 'Orbitron', 'Courier New', 'Segoe UI', sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dash[data-theme="light"] {
+    --dash-bg: #f4f6fb;
+    --dash-surface: #ffffff;
+    --dash-border: rgba(0, 140, 168, 0.2);
+    --dash-text: #0f1419;
+    --dash-text-muted: #5b6472;
+    --dash-accent: #0090a8;
+    --dash-accent-2: #d1005c;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Sidebar ──────────────────────────────────────────────────── */
+
+.dash-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--dash-surface);
+    border-right: 1px solid var(--dash-border);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.dash-logo-slot {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid transparent;
+}
+
+.dash-logo-placeholder {
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    color: var(--dash-text-muted);
+    border: 1px dashed var(--dash-border);
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+}
+
+.dash-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 2rem 1.25rem;
+}
+
+.dash-nav-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--dash-text);
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dash-nav-btn:hover {
+    border-color: var(--dash-border);
+    background: rgba(0, 217, 255, 0.06);
+}
+
+.dash-nav-btn.active {
+    background: linear-gradient(135deg, var(--dash-accent) 0%, var(--dash-accent-2) 100%);
+    color: #0f1419;
+    border-color: transparent;
+}
+
+.dash-sidebar-footer {
+    padding: 1.5rem 1.25rem 2rem;
+    border-top: 1px solid var(--dash-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dash-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: none;
+    border: 1px solid var(--dash-border);
+    color: var(--dash-text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dash-logout-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.dash-logout-btn:hover {
+    border-color: var(--dash-accent-2);
+    color: var(--dash-accent-2);
+}
+
+.dash-role-badge {
+    font-size: 0.75rem;
+    color: var(--dash-text-muted);
+    letter-spacing: 0.5px;
+}
+
+/* ── Main column ──────────────────────────────────────────────── */
+
+.dash-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dash-topbar {
+    height: 72px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    border-bottom: 1px solid var(--dash-border);
+}
+
+.dash-clock {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.dash-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dash-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 217, 255, 0.08);
+    border: 1px solid var(--dash-border);
+    color: var(--dash-accent);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dash-icon-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.dash-icon-btn:hover {
+    background: var(--dash-accent);
+    color: #0f1419;
+}
+
+.dash-content {
+    flex: 1;
+    padding: 2.5rem;
+    overflow-y: auto;
+}
+
+.dash-panel h1 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+}
+
+.dash-panel-empty {
+    color: var(--dash-text-muted);
+    font-size: 1rem;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .dash {
+        flex-direction: column;
+    }
+
+    .dash-sidebar {
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        border-right: none;
+        border-bottom: 1px solid var(--dash-border);
+    }
+
+    .dash-logo-slot {
+        height: auto;
+        padding: 0.75rem 1rem;
+    }
+
+    .dash-nav {
+        flex-direction: row;
+        padding: 0.75rem;
+    }
+
+    .dash-sidebar-footer {
+        flex-direction: row;
+        border-top: none;
+        padding: 0.75rem 1rem;
+    }
 }
