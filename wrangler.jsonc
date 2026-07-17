@@ -3,6 +3,11 @@
   "name": "vlorion-dashboard",
   "compatibility_date": "2026-07-16",
   "compatibility_flags": ["nodejs_compat"],
+  "main": ".open-next/worker.js",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
   "observability": {
     "enabled": true
   },
@@ -10,7 +15,7 @@
     {
       "binding": "DB",
       "database_name": "vlorion-dashboard-db",
-      "database_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      "database_id": "139c8459-541a-4375-82b0-dd8e07b4798e"
     }
   ]
 }

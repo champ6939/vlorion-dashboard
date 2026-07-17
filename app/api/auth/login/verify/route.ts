@@ -7,7 +7,7 @@ import { createSessionCookie } from '@/lib/session';
 export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
-    const { email, challengeId, response } = await req.json();
+    const { email, challengeId, response } = (await req.json()) as { email: string; challengeId: string; response: any };
     if (!email || !challengeId || !response) {
         return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
             },
         });
     } catch (err) {
-        return NextResponse.json({ error: '驗證失敗', detail: String(err) }, { status: 400 });
+        return NextResponse.json({ error: '驗證失敗' }, { status: 400 });
     }
 
     if (!verification.verified) {

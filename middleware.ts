@@ -5,7 +5,22 @@ import { verifySession, COOKIE_NAME } from '@/lib/session';
 // /embed.js, /api/public/forms/* — is intentionally left untouched so
 // visitors can fill out embedded forms without logging in.
 export const config = {
-    matcher: ['/dashboard/:path*', '/api/forms/:path*'],
+    matcher: [
+        '/',
+        '/dashboard/:path*',
+        '/forms/:path*',
+        '/communications',
+        '/api/forms/:path*',
+        '/api/communications/:path*',
+        // YouTube proxy routes (channel + analytics + start OAuth)
+        // NOTE: /api/youtube/oauth/callback is intentionally excluded —
+        //       Google redirects there without a session cookie.
+        '/api/youtube/channel',
+        '/api/youtube/analytics',
+        '/api/youtube/oauth/start',
+        // Finance routes
+        '/api/finance/:path*',
+    ],
 };
 
 export async function middleware(req: NextRequest) {

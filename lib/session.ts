@@ -41,7 +41,15 @@ export async function createSessionCookie(payload: SessionPayload, secret: strin
 }
 
 export function clearSessionCookie() {
-    return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`;
+    const isProd = process.env.NODE_ENV === 'production';
+    return [
+        `${COOKIE_NAME}=`,
+        'Path=/',
+        'HttpOnly',
+        'SameSite=Strict',
+        isProd ? 'Secure' : '',
+        'Max-Age=0',
+    ].filter(Boolean).join('; ');
 }
 
 export async function verifySession(token: string | undefined, secret: string): Promise<SessionPayload | null> {

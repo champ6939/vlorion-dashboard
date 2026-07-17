@@ -6,7 +6,7 @@ import { getRpConfig, CHALLENGE_TTL_SECONDS } from '@/lib/webauthn';
 export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
-    const { email } = await req.json();
+    const { email } = (await req.json()) as { email: string };
     if (!email || typeof email !== 'string') {
         return NextResponse.json({ error: 'Email required' }, { status: 400 });
     }
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     const options = await generateAuthenticationOptions({
         rpID,
         userVerification: 'required',
-        allowCredentials: creds.results.map(c => ({
+        allowCredentials: creds.results.map((c: { id: string; transports: string | null }) => ({
             id: c.id,
             transports: c.transports ? JSON.parse(c.transports) : undefined,
         })),

@@ -1,19 +1,26 @@
 /**
  * WebAuthn relying-party configuration.
  * ------------------------------------------------------------------
- * rpID must be the bare hostname (no scheme/port) and must match the
- * domain the dashboard is served from. Locally this is "localhost";
- * in production it's "dashboard.vlorion.com".
+ * Priority: explicit env vars → localhost defaults (dev only).
+ *
+ * Set these in your Cloudflare Pages / Workers dashboard
+ * (or wrangler.jsonc [vars] for non-secret values):
+ *
+ *   RP_ID     = dashboard.vlorion.com      (bare hostname, no scheme)
+ *   RP_ORIGIN = https://dashboard.vlorion.com
+ *   RP_NAME   = VLORION Dashboard          (optional, cosmetic)
+ *
+ * Do NOT rely on NODE_ENV inside Edge middleware/routes — it is not
+ * reliably set to 'production' inside Cloudflare Workers.
  * ------------------------------------------------------------------
  */
 
 export function getRpConfig() {
-    const isProd = process.env.NODE_ENV === 'production';
-    return {
-        rpName: 'VLORION Dashboard',
-        rpID: isProd ? 'dashboard.vlorion.com' : 'localhost',
-        origin: isProd ? 'https://dashboard.vlorion.com' : 'http://localhost:3000',
-    };
+    const rpID = process.env.RP_ID ?? 'localhost';
+    const origin = process.env.RP_ORIGIN ?? 'http://localhost:3000';
+    const rpName = process.env.RP_NAME ?? 'VLORION Dashboard';
+
+    return { rpName, rpID, origin };
 }
 
 export const CHALLENGE_TTL_SECONDS = 5 * 60; // 5 minutes to complete the ceremony

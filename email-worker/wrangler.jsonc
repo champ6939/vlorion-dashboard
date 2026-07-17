@@ -1,0 +1,13 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "vlorion-email-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-16",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "vlorion-dashboard-db",
+      "database_id": "139c8459-541a-4375-82b0-dd8e07b4798e"
+    }
+  ]
+}
