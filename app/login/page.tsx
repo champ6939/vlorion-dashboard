@@ -2,109 +2,43 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
 import './login.css';
 
-type Status = 'idle' | 'checking' | 'needs-registration' | 'error' | 'success';
+type Mode = 'login' | 'register';
 
 function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const next = searchParams.get('next') || '/dashboard';
+    const next = searchParams.get('next') || '/';
 
+    const [mode, setMode] = useState<Mode>('login');
     const [email, setEmail] = useState('');
-    const [status, setStatus] = useState<Status>('idle');
-    const [message, setMessage] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
 
-    const handleLogin = async () => {
-        setStatus('checking');
-        setMessage('');
+    const handleSubmit = async () => {
+        setError('');
+        if (!email || !password) { setError('請填寫所有欄位'); return; }
+        setLoading(true);
         try {
-            const optRes = await fetch('/api/auth/login/options', {
+            const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+            const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ email, password }),
             });
-            const optData = (await optRes.json()) as any;
-            
-            if (!optRes.ok) {
-                if (optRes.status === 400 && optData.error?.includes('還沒有註冊')) {
-                    setStatus('needs-registration');
-                    setMessage('這個帳號尚未綁定任何金鑰，請先完成裝置註冊。');
-                    return;
-                }
-                setStatus('error');
-                setMessage(optData.error || '登入失敗，請確認 Email 是否正確');
-                return;
-            }
-
-            const authResponse = await startAuthentication({ optionsJSON: optData.options });
-
-            const verifyRes = await fetch('/api/auth/login/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, challengeId: optData.challengeId, response: authResponse }),
-            });
-
-            if (!verifyRes.ok) {
-                const err = (await verifyRes.json()) as any;
-                setStatus('error');
-                setMessage(err.error || '驗證失敗，請重試');
-                return;
-            }
-
-            setStatus('success');
-            // Brief success flash, then navigate
-            setTimeout(() => router.push(next), 1200);
+            const data = await res.json() as any;
+            if (!res.ok) { setError(data.error || '發生錯誤，請重試'); return; }
+            setSuccess(true);
+            setTimeout(() => router.push(next), 1000);
         } catch {
-            setStatus('error');
-            setMessage('操作已取消或裝置驗證失敗');
+            setError('網路錯誤，請稍後再試');
+        } finally {
+            setLoading(false);
         }
     };
-
-    const handleRegister = async () => {
-        setStatus('checking');
-        setMessage('');
-        try {
-            const optRes = await fetch('/api/auth/register/options', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            });
-            const optData = (await optRes.json()) as any;
-
-            if (!optRes.ok) {
-                setStatus('error');
-                setMessage(optData.error || '無法取得註冊選項，請稍後再試');
-                return;
-            }
-
-            const regResponse = await startRegistration({ optionsJSON: optData.options });
-
-            const verifyRes = await fetch('/api/auth/register/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, challengeId: optData.challengeId, response: regResponse }),
-            });
-
-            if (!verifyRes.ok) {
-                const err = (await verifyRes.json()) as any;
-                setStatus('error');
-                setMessage(err.error || '驗證失敗，請重試');
-                return;
-            }
-
-            setStatus('success');
-            setTimeout(() => router.push(next), 1200);
-        } catch {
-            setStatus('error');
-            setMessage('操作已取消或裝置驗證失敗');
-        }
-    };
-
-    const isLoading = status === 'checking';
-    const isSuccess = status === 'success';
-    const needsReg  = status === 'needs-registration';
 
     return (
         <div className="login-card">
@@ -112,10 +46,11 @@ function LoginContent() {
                 <img src="/favicon.ico" alt="VLORION" />
             </div>
             <h1>VLORION Dashboard</h1>
-            <p className="login-sub">用你的硬體金鑰或裝置生物辨識登入，<br />無需密碼。</p>
+            <p className="login-sub">
+                {mode === 'login' ? '請輸入您的管理員帳號與密碼' : '首次使用，請建立管理員帳號'}
+            </p>
 
-            {isSuccess ? (
-                /* ── Success state ── */
+            {success ? (
                 <div className="login-success">
                     <div className="login-success-icon">
                         <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -133,50 +68,45 @@ function LoginContent() {
                         placeholder="管理員 Email"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && !isLoading && handleLogin()}
-                        disabled={isLoading}
+                        onKeyDown={e => e.key === 'Enter' && !loading && handleSubmit()}
+                        disabled={loading}
                         autoComplete="email"
                     />
+                    <input
+                        id="login-password"
+                        type="password"
+                        className="login-input"
+                        placeholder="密碼"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && !loading && handleSubmit()}
+                        disabled={loading}
+                        autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                        style={{ marginTop: '12px' }}
+                    />
 
-                    {message && (
-                        <p className={`login-message ${status === 'error' ? 'is-error' : 'is-info'}`}>
-                            {message}
-                        </p>
-                    )}
+                    {error && <p className="login-message is-error">{error}</p>}
 
-                    {needsReg ? (
-                        <>
-                            <button
-                                id="btn-register"
-                                className="login-btn"
-                                onClick={handleRegister}
-                                disabled={!email || isLoading}
-                            >
-                                {isLoading
-                                    ? <><span className="login-spinner" />驗證中…</>
-                                    : '註冊新裝置金鑰'}
-                            </button>
-                            <div className="login-divider">或</div>
-                            <button
-                                id="btn-back-login"
-                                className="login-btn login-btn-secondary"
-                                onClick={() => { setStatus('idle'); setMessage(''); }}
-                            >
-                                返回，使用其他帳號
-                            </button>
-                        </>
-                    ) : (
-                        <button
-                            id="btn-login"
-                            className="login-btn"
-                            onClick={handleLogin}
-                            disabled={!email || isLoading}
-                        >
-                            {isLoading
-                                ? <><span className="login-spinner" />驗證中…</>
-                                : '登入'}
-                        </button>
-                    )}
+                    <button
+                        id="btn-submit"
+                        className="login-btn"
+                        onClick={handleSubmit}
+                        disabled={!email || !password || loading}
+                    >
+                        {loading
+                            ? <><span className="login-spinner" />處理中…</>
+                            : mode === 'login' ? '登入' : '建立帳號'}
+                    </button>
+
+                    <div className="login-divider">或</div>
+
+                    <button
+                        id="btn-toggle-mode"
+                        className="login-btn login-btn-secondary"
+                        onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
+                    >
+                        {mode === 'login' ? '首次使用？建立管理員帳號' : '已有帳號？返回登入'}
+                    </button>
                 </>
             )}
         </div>
