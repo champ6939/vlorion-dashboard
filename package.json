@@ -9,7 +9,8 @@
     "lint": "eslint",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && wrangler dev",
-    "cf:preview:remote": "opennextjs-cloudflare build && wrangler dev --remote"
+    "cf:preview:remote": "opennextjs-cloudflare build && wrangler dev --remote",
+    "deploy": "opennextjs-cloudflare build && wrangler deploy"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.1",
