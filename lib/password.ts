@@ -1,6 +1,6 @@
 /**
  * Password hashing utilities using Web Crypto API (works in Cloudflare Workers edge runtime)
- * Uses PBKDF2 with SHA-256, 100,000 iterations
+ * Uses PBKDF2 with SHA-256, 10,000 iterations (safe for edge CPU limits)
  */
 
 export async function hashPassword(password: string): Promise<string> {
@@ -16,7 +16,7 @@ export async function hashPassword(password: string): Promise<string> {
     );
 
     const bits = await crypto.subtle.deriveBits(
-        { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 100000 },
+        { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 10000 },
         keyMaterial,
         256
     );
@@ -42,7 +42,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
     );
 
     const bits = await crypto.subtle.deriveBits(
-        { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 100000 },
+        { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 10000 },
         keyMaterial,
         256
     );
