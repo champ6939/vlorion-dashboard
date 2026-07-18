@@ -4,37 +4,65 @@ import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import './login.css';
 
-type Mode = 'login' | 'register';
+const COPY = {
+    'zh-TW': {
+        title: 'VLORION Dashboard',
+        sub: '請輸入您的管理員帳號與密碼',
+        emailPlaceholder: '管理員 Email',
+        passwordPlaceholder: '密碼',
+        loginBtn: '登入',
+        loading: '處理中…',
+        successMsg: '驗證成功，正在跳轉…',
+    },
+    en: {
+        title: 'VLORION Dashboard',
+        sub: 'Sign in with your admin credentials',
+        emailPlaceholder: 'Admin Email',
+        passwordPlaceholder: 'Password',
+        loginBtn: 'Sign In',
+        loading: 'Processing…',
+        successMsg: 'Verified! Redirecting…',
+    },
+};
+
+type Lang = 'zh-TW' | 'en';
 
 function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const next = searchParams.get('next') || '/';
 
-    const [mode, setMode] = useState<Mode>('login');
+    const [lang, setLang] = useState<Lang>('zh-TW');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
-    const handleSubmit = async () => {
+    const t = COPY[lang];
+
+    const handleLogin = async () => {
         setError('');
-        if (!email || !password) { setError('請填寫所有欄位'); return; }
+        if (!email || !password) {
+            setError(lang === 'zh-TW' ? '請填寫所有欄位' : 'Please fill in all fields');
+            return;
+        }
         setLoading(true);
         try {
-            const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-            const res = await fetch(endpoint, {
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
             const data = await res.json() as any;
-            if (!res.ok) { setError(data.error || '發生錯誤，請重試'); return; }
+            if (!res.ok) {
+                setError(data.error || (lang === 'zh-TW' ? '發生錯誤，請重試' : 'An error occurred, please try again'));
+                return;
+            }
             setSuccess(true);
             setTimeout(() => router.push(next), 1000);
         } catch {
-            setError('網路錯誤，請稍後再試');
+            setError(lang === 'zh-TW' ? '請求失敗，請重試' : 'Request failed, please try again');
         } finally {
             setLoading(false);
         }
@@ -42,13 +70,19 @@ function LoginContent() {
 
     return (
         <div className="login-card">
+            {/* Language Toggle */}
+            <button
+                className="lang-toggle"
+                onClick={() => setLang(lang === 'zh-TW' ? 'en' : 'zh-TW')}
+            >
+                {lang === 'zh-TW' ? 'EN' : '中文'}
+            </button>
+
             <div className="login-logo">
                 <img src="/favicon.ico" alt="VLORION" />
             </div>
-            <h1>VLORION Dashboard</h1>
-            <p className="login-sub">
-                {mode === 'login' ? '請輸入您的管理員帳號與密碼' : '首次使用，請建立管理員帳號'}
-            </p>
+            <h1>{t.title}</h1>
+            <p className="login-sub">{t.sub}</p>
 
             {success ? (
                 <div className="login-success">
@@ -57,7 +91,7 @@ function LoginContent() {
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
                     </div>
-                    <p>驗證成功，正在跳轉…</p>
+                    <p>{t.successMsg}</p>
                 </div>
             ) : (
                 <>
@@ -65,10 +99,10 @@ function LoginContent() {
                         id="login-email"
                         type="email"
                         className="login-input"
-                        placeholder="管理員 Email"
+                        placeholder={t.emailPlaceholder}
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && !loading && handleSubmit()}
+                        onKeyDown={e => e.key === 'Enter' && !loading && handleLogin()}
                         disabled={loading}
                         autoComplete="email"
                     />
@@ -76,36 +110,26 @@ function LoginContent() {
                         id="login-password"
                         type="password"
                         className="login-input"
-                        placeholder="密碼"
+                        placeholder={t.passwordPlaceholder}
                         value={password}
                         onChange={e => setPassword(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && !loading && handleSubmit()}
+                        onKeyDown={e => e.key === 'Enter' && !loading && handleLogin()}
                         disabled={loading}
-                        autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                        autoComplete="current-password"
                         style={{ marginTop: '12px' }}
                     />
 
                     {error && <p className="login-message is-error">{error}</p>}
 
                     <button
-                        id="btn-submit"
+                        id="btn-login"
                         className="login-btn"
-                        onClick={handleSubmit}
+                        onClick={handleLogin}
                         disabled={!email || !password || loading}
                     >
                         {loading
-                            ? <><span className="login-spinner" />處理中…</>
-                            : mode === 'login' ? '登入' : '建立帳號'}
-                    </button>
-
-                    <div className="login-divider">或</div>
-
-                    <button
-                        id="btn-toggle-mode"
-                        className="login-btn login-btn-secondary"
-                        onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
-                    >
-                        {mode === 'login' ? '首次使用？建立管理員帳號' : '已有帳號？返回登入'}
+                            ? <><span className="login-spinner" />{t.loading}</>
+                            : t.loginBtn}
                     </button>
                 </>
             )}
